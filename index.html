@@ -108,7 +108,11 @@ h1 { font-family: var(--display); font-weight: 800; font-size: 1.15rem; line-hei
 .tile.mini .add { background: var(--surface); color: var(--ink); min-height: 0; }
 .tile.mini .add .name { font-size: 0.78rem; }
 .tile.mini .add .name { font-weight: 600; }
-.tile.mini .add .sub { font-size: 0.72rem; color: var(--muted); }
+.tile.mini .add .sub { font-size: 0.72rem; color: var(--muted); margin-top: auto; }
+.tile.mini .add .price { margin-top: 0; }
+.tile > .add { flex: 1; }
+.add .nw { white-space: nowrap; }
+@media (max-width: 599px) { #t-rum .add .name { font-size: 0.72rem; letter-spacing: -0.01em; } }
 .tile.mini .add .price { color: var(--gold); }
 .tile.mini { border-style: dashed; }
 .tile.mini.has { border-style: solid; border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
@@ -287,7 +291,7 @@ h1 { font-family: var(--display); font-weight: 800; font-size: 1.15rem; line-hei
       t.innerHTML =
         '<button class="add" data-add="' + p.id + '" aria-label="' + p.name + ' hinzufügen">' +
           '<span class="icons" aria-hidden="true">' + p.icons + '</span>' +
-          '<span class="name">' + p.name.replace("Feuerzangenbowle", "Feuerzangen&shy;bowle").replace("Heidelbeer-Glühwein", "Heidelbeer-&#8203;Glühwein").replace("Früchtepunsch", "Früchte&shy;punsch") + '</span>' +
+          '<span class="name">' + p.name.replace("Feuerzangenbowle", "Feuerzangen&shy;bowle").replace("Heidelbeer-Glühwein", "Heidelbeer-&#8203;Glühwein").replace("Früchtepunsch", "Früchte&shy;punsch").replace("GW Rot / Kakao mit Shot", "<span class=\"nw\">GW Rot /</span> <span class=\"nw\">Kakao mit Shot</span>") + '</span>' +
           '<span class="price">' + eur(p.price) + '</span>' +
         '</button>' +
         '<div class="ctl"><span class="count" id="c-' + p.id + '">0</span>' +
