@@ -2,7 +2,7 @@
 // Nach dem ersten Öffnen kommt alles aus dem Speicher auf dem Gerät.
 // Die App funktioniert dann auch ohne Internet und auch, wenn die Webseite
 // nicht mehr erreichbar ist (404, privat, gelöscht).
-const CACHE = "zunfthaus-rechner-v6";
+const CACHE = "zunfthaus-rechner-v7";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png", "./icon.svg"];
 
 self.addEventListener("install", e => {
