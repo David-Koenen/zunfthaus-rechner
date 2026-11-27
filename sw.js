@@ -1,5 +1,5 @@
 // Offline-Cache für den Zunfthaus-Rechner
-const CACHE = "zunfthaus-rechner-v4";
+const CACHE = "zunfthaus-rechner-v5";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png", "./icon.svg"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener("activate", e => {

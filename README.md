@@ -4,6 +4,6 @@ Bestell-Rechner für den Glühweinstand auf dem Weihnachtsmarkt. Läuft im Brows
 
 - Große Buttons für alle Getränke, Preise inkl. 4,50 € Pfand
 - Pfand zurück, Rückgängig, Summenseite mit Rückgeld
-- Historie der letzten Bestellungen (nur auf dem Gerät gespeichert)
+- Historie der letzten Bestellungen (nur auf dem Gerät gespeichert, wird nach 48 Stunden automatisch gelöscht)
 
 Preise ändern: in `index.html` die Liste `BIG` bzw. `SMALL` anpassen (Preise in Cent). Nach einer Änderung in `sw.js` die Versionsnummer in `CACHE` erhöhen, damit Handys die neue Version laden.

@@ -237,6 +237,7 @@ h1 { font-family: var(--display); font-weight: 800; font-size: 1.15rem; line-hei
       <button class="danger" id="histClear">🗑 Historie löschen</button>
     </div>
     <div class="today" id="today"></div>
+    <div class="cups">Bestellungen werden nach 48 Stunden automatisch gelöscht.</div>
     <div class="hist" id="histList"></div>
   </div>
 </div>
@@ -269,6 +270,13 @@ h1 { font-family: var(--display); font-weight: 800; font-size: 1.15rem; line-hei
 
   var counts = load(KEY_CUR, {});
   var history = load(KEY_HIST, []);
+  var KEEP_MS = 48 * 60 * 60 * 1000; // Bestellungen älter als 48 Stunden werden automatisch gelöscht
+  function prune() {
+    var cut = Date.now() - KEEP_MS, n = history.length;
+    history = history.filter(function (h) { return h && h.ts >= cut; });
+    if (history.length !== n) save(KEY_HIST, history);
+  }
+  prune();
   var editingId = load(KEY_EDIT, null);
   var given = null;
   var undoStack = []; // Schnappschüsse vor jeder Änderung
@@ -405,6 +413,7 @@ h1 { font-family: var(--display); font-weight: 800; font-size: 1.15rem; line-hei
       var i = history.findIndex(function (h) { return h.id === editingId; });
       if (i >= 0) { entry.ts = history[i].ts; history[i] = entry; } else history.unshift(entry);
     } else history.unshift(entry);
+    prune();
     history = history.slice(0, 300);
     save(KEY_HIST, history);
   }
@@ -432,6 +441,7 @@ h1 { font-family: var(--display); font-weight: 800; font-size: 1.15rem; line-hei
     return parts.join(", ");
   }
   function renderHist() {
+    prune();
     var today = new Date().toDateString();
     var tSum = 0, tN = 0, tCups = 0;
     history.forEach(function (h) {
