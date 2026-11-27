@@ -107,6 +107,7 @@ h1 { font-family: var(--display); font-weight: 800; font-size: 1.15rem; line-hei
 .tile.mini .add { background: var(--surface); color: var(--ink); min-height: 0; }
 .tile.mini .add .name { font-size: 0.78rem; }
 .tile.mini .add .name { font-weight: 600; }
+.add .sub { font-size: 0.72rem; opacity: 0.85; }
 .tile.mini .add .sub { font-size: 0.72rem; color: var(--muted); margin-top: auto; }
 .tile.mini .add .price { margin-top: 0; }
 .tile > .add { flex: 1; }
@@ -270,7 +271,7 @@ h1 { font-family: var(--display); font-weight: 800; font-size: 1.15rem; line-hei
   var SMALL = [
     { id: "limo",  name: "Limo · Wasser · Schorle · Shot", short: "Limo / Wasser / Schorle / Shot", price: 350 },
     { id: "kaugummi", name: "Kaugummi", short: "Kaugummi", price: 380 },
-    { id: "schuss", name: "Mit Schuss", short: "Mit Schuss (Aufpreis)", price: 150, extra: true }
+    { id: "schuss", icons: "🥃", name: "+ Schuss", short: "+ Schuss (Aufpreis)", price: 150, extra: true }
   ];
   var ALL = BIG.concat(SMALL);
   var byId = {}; ALL.forEach(function (p) { byId[p.id] = p; });
@@ -304,32 +305,38 @@ h1 { font-family: var(--display); font-weight: 800; font-size: 1.15rem; line-hei
   function $(id) { return document.getElementById(id); }
 
   // ---------- Kasse ----------
+  function bigTile(p) {
+    var t = document.createElement("div");
+    t.className = "tile" + (p.pfand ? " pfand" : ""); t.id = "t-" + p.id;
+    t.innerHTML =
+      '<button class="add" data-add="' + p.id + '" aria-label="' + p.name + ' hinzufügen">' +
+        '<span class="icons" aria-hidden="true">' + p.icons + '</span>' +
+        '<span class="name">' + p.name.replace("Feuerzangenbowle", "Feuerzangen&shy;bowle").replace("Heidelbeer-Glühwein", "Heidelbeer-&#8203;Glühwein").replace("Früchtepunsch", "Früchte&shy;punsch").replace("GW Rot / Kakao mit Shot", "<span class=\"nw\">GW Rot /</span> <span class=\"nw\">Kakao mit Shot</span>") + '</span>' +
+        (p.extra ? '<span class="sub">Aufpreis</span>' : '') +
+        '<span class="price">' + (p.extra ? '+' : '') + eur(p.price) + '</span>' +
+      '</button>' +
+      '<div class="ctl"><span class="count" id="c-' + p.id + '">0</span>' +
+      '<button class="minus" data-sub="' + p.id + '" aria-label="Eins weniger">−</button></div>';
+    return t;
+  }
+  function miniTile(p) {
+    var t = document.createElement("div");
+    t.className = "tile mini"; t.id = "t-" + p.id;
+    t.innerHTML =
+      '<button class="add" data-add="' + p.id + '" aria-label="' + p.name + ' hinzufügen">' +
+        '<span class="name">' + p.name + '</span><span class="sub">ohne Pfand</span>' +
+        '<span class="price">' + eur(p.price) + '</span></button>' +
+      '<div class="ctl"><span class="count" id="c-' + p.id + '">0</span>' +
+      '<button class="minus" data-sub="' + p.id + '" aria-label="Eins weniger">−</button></div>';
+    return t;
+  }
+  // Reihenfolge: Getränke, + Schuss (rot), kleine Artikel ohne Pfand, Pfand zurück
   function buildTiles() {
     var g = $("grid"); g.innerHTML = "";
-    BIG.forEach(function (p) {
-      var t = document.createElement("div");
-      t.className = "tile" + (p.pfand ? " pfand" : ""); t.id = "t-" + p.id;
-      t.innerHTML =
-        '<button class="add" data-add="' + p.id + '" aria-label="' + p.name + ' hinzufügen">' +
-          '<span class="icons" aria-hidden="true">' + p.icons + '</span>' +
-          '<span class="name">' + p.name.replace("Feuerzangenbowle", "Feuerzangen&shy;bowle").replace("Heidelbeer-Glühwein", "Heidelbeer-&#8203;Glühwein").replace("Früchtepunsch", "Früchte&shy;punsch").replace("GW Rot / Kakao mit Shot", "<span class=\"nw\">GW Rot /</span> <span class=\"nw\">Kakao mit Shot</span>") + '</span>' +
-          '<span class="price">' + eur(p.price) + '</span>' +
-        '</button>' +
-        '<div class="ctl"><span class="count" id="c-' + p.id + '">0</span>' +
-        '<button class="minus" data-sub="' + p.id + '" aria-label="Eins weniger">−</button></div>';
-      g.appendChild(t);
-    });
-    SMALL.forEach(function (p) {
-      var t = document.createElement("div");
-      t.className = "tile mini"; t.id = "t-" + p.id;
-      t.innerHTML =
-        '<button class="add" data-add="' + p.id + '" aria-label="' + p.name + ' hinzufügen">' +
-          '<span class="name">' + p.name + '</span><span class="sub">' + (p.extra ? 'Aufpreis' : 'ohne Pfand') + '</span>' +
-          '<span class="price">' + (p.extra ? '+' : '') + eur(p.price) + '</span></button>' +
-        '<div class="ctl"><span class="count" id="c-' + p.id + '">0</span>' +
-        '<button class="minus" data-sub="' + p.id + '" aria-label="Eins weniger">−</button></div>';
-      g.appendChild(t);
-    });
+    BIG.forEach(function (p) { if (!p.pfand) g.appendChild(bigTile(p)); });
+    SMALL.forEach(function (p) { if (p.extra) g.appendChild(bigTile(p)); });
+    SMALL.forEach(function (p) { if (!p.extra) g.appendChild(miniTile(p)); });
+    BIG.forEach(function (p) { if (p.pfand) g.appendChild(bigTile(p)); });
   }
 
   function renderMain() {

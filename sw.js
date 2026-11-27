@@ -2,7 +2,7 @@
 // Nach dem ersten Öffnen kommt alles aus dem Speicher auf dem Gerät.
 // Die App funktioniert dann auch ohne Internet und auch, wenn die Webseite
 // nicht mehr erreichbar ist (404, privat, gelöscht).
-const CACHE = "zunfthaus-rechner-v9";
+const CACHE = "zunfthaus-rechner-v10";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png", "./icon.svg",
   "./fonts/app-fonts.css", "./fonts/BricolageGrotesque-latin-a97232.woff2", "./fonts/BricolageGrotesque-latin-ext-a4fe79.woff2",
   "./fonts/Inter-latin-567244.woff2", "./fonts/Inter-latin-ext-395290.woff2"];
