@@ -4,20 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Zunfthaus-Rechner</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Zunfthaus-Rechner">
+<meta name="apple-mobile-web-app-title" content="Zunfthaus-Rechner" id="metaAppTitle">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#1d2b24">
-<link rel="icon" type="image/svg+xml" href="icon.svg">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon.svg" id="linkIcon">
+<link rel="apple-touch-icon" href="apple-touch-icon.png" id="linkTouch">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="fonts/app-fonts.css">
+<script>try { var t = JSON.parse(localStorage.getItem("wmr.theme.v1")); if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
 <style>
 :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: 0; }
 
-/* Layout: one-screen till. Price tiles in a grid, a fixed bottom bar with the running total. Summary and history are full views swapped in place. */
+/* Layout: one-screen till. Price tiles in a grid, a fixed bottom bar with the running total. Summary, history and admin are full views swapped in place. */
 :root {
   --bg: #f3f5f2;
   --surface: #ffffff;
@@ -51,6 +51,7 @@
 }
 html, body { height: 100%; }
 body {
+  margin: 0;
   background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px;
   -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
   overscroll-behavior-y: none;
@@ -66,59 +67,58 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 }
 @media (min-width: 420px) { .wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); } }
 header.top { display: flex; align-items: center; gap: 8px; padding-bottom: 8px; }
-header.top .logo { width: 40px; height: 40px; border-radius: 10px; flex: none; }
+header.top .logo { width: 40px; height: 40px; border-radius: 10px; flex: none; object-fit: cover; }
 header.top .ttl { flex: 1; min-width: 0; }
 .tbtn { height: 44px; padding: 0 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); font-weight: 600; font-size: 0.9rem; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
 .tbtn:disabled { opacity: 0.4; }
 .tbtn .ic { font-size: 1.15rem; line-height: 1; }
-@media (max-width: 419px) { #undoBtn .lbl { display: none; } .tbtn { padding: 0 13px; } }
-h1 { font-family: var(--display); font-weight: 800; font-size: 1.15rem; line-height: 1.1; margin: 0; letter-spacing: -0.01em; }
-.pfandnote { color: var(--muted); font-size: 0.75rem; display: block; }
+@media (max-width: 479px) { #undoBtn .lbl { display: none; } .tbtn { padding: 0 12px; } }
+h1 { font-family: var(--display); font-weight: 800; font-size: 1.15rem; line-height: 1.1; margin: 0; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pfandnote { color: var(--muted); font-size: 0.75rem; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* tiles: 3 columns on phones so every drink fits on one screen, 4 on tablets */
 .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 @media (min-width: 600px) { .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; } }
-.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; display: flex; flex-direction: column; overflow: hidden; }
-.tile.has { border-color: var(--wine); box-shadow: 0 0 0 1px var(--wine) inset; }
-.add { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 9px 9px 8px; text-align: left; min-height: 100px; background: var(--wine); color: var(--wine-ink); width: 100%; }
+.tile {
+  --c: var(--wine); --ci: #ffffff; --cs: var(--wine-soft); --ct: var(--wine);
+  --cs: color-mix(in srgb, var(--c) 16%, var(--surface));
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; display: flex; flex-direction: column; overflow: hidden;
+}
+.tile.has { border-color: var(--c); box-shadow: 0 0 0 1px var(--c) inset; }
+.add { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 9px 9px 8px; text-align: left; min-height: 100px; background: var(--c); color: var(--ci); width: 100%; }
 .add:active { filter: brightness(1.15); transform: scale(0.98); }
 .add .icons { font-size: 1.35rem; line-height: 1; }
-.add .name { font-weight: 700; font-size: 0.82rem; line-height: 1.2; text-wrap: balance; hyphens: manual; }
+.add .name { font-weight: 700; font-size: 0.82rem; line-height: 1.2; text-wrap: balance; hyphens: auto; -webkit-hyphens: auto; hyphenate-limit-chars: 10 4 4; -webkit-hyphenate-limit-before: 4; -webkit-hyphenate-limit-after: 4; overflow-wrap: anywhere; }
+.add .name.long { font-size: 0.72rem; }
 .add .price { font-family: var(--display); font-weight: 800; font-size: 1.2rem; margin-top: auto; }
+.add .sub { font-size: 0.72rem; opacity: 0.85; }
 .ctl { display: flex; align-items: center; justify-content: space-between; padding: 5px; gap: 4px; }
 .count { font-family: var(--display); font-weight: 800; font-size: 1.6rem; min-width: 2ch; text-align: center; flex: 1; }
 .count.zero { color: var(--muted); opacity: 0.45; }
 .count.bump { animation: bump 0.22s ease-out; }
 @keyframes bump { 0% { transform: scale(1.45); } 100% { transform: scale(1); } }
-.minus { width: 48px; height: 42px; border-radius: 10px; background: var(--wine-soft); color: var(--wine); font-size: 1.7rem; font-weight: 700; line-height: 1; }
+.minus { width: 48px; height: 42px; border-radius: 10px; background: var(--cs); color: var(--ct); font-size: 1.7rem; font-weight: 700; line-height: 1; }
+.minus:disabled { opacity: 0.35; }
 @media (min-width: 600px) {
   .add { padding: 12px 12px 10px; min-height: 120px; gap: 4px; }
   .add .icons { font-size: 1.7rem; }
   .add .name { font-size: 1.02rem; }
+  .add .name.long { font-size: 0.9rem; }
   .add .price { font-size: 1.5rem; }
   .count { font-size: 1.9rem; }
   .minus { width: 56px; height: 48px; font-size: 1.9rem; }
 }
-.minus:disabled { opacity: 0.35; }
-.tile.pfand .add { background: var(--pfand); }
-.tile.pfand.has { border-color: var(--pfand); box-shadow: 0 0 0 1px var(--pfand) inset; }
-.tile.pfand .minus { background: var(--pfand-soft); color: var(--pfand); }
-
-.tile.mini .add { background: var(--surface); color: var(--ink); min-height: 0; }
-.tile.mini .add .name { font-size: 0.78rem; }
-.tile.mini .add .name { font-weight: 600; }
-.add .sub { font-size: 0.72rem; opacity: 0.85; }
-.tile.mini .add .sub { font-size: 0.72rem; color: var(--muted); margin-top: auto; }
-.tile.mini .add .price { margin-top: 0; }
 .tile > .add { flex: 1; }
-.add .nw { white-space: nowrap; }
-@media (max-width: 599px) { #t-rum .add .name { font-size: 0.72rem; letter-spacing: -0.01em; } }
-.tile.mini .add .price { color: var(--gold); }
-.tile.mini { border-style: dashed; }
-.tile.mini.has { border-style: solid; border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
-.tile.mini .ctl { border-top: 1px solid var(--line); }
-.tile.mini .minus { background: var(--bg); color: var(--ink); }
-@media (min-width: 600px) { .tile.mini .add { min-height: 120px; } .tile.mini .add .name { font-size: 1.02rem; } }
+
+/* neutral tiles (no colour chosen): light card, dashed border, gold price */
+.tile.neutral { border-style: dashed; --c: var(--gold); }
+.tile.neutral .add { background: var(--surface); color: var(--ink); }
+.tile.neutral .add .name { font-weight: 600; }
+.tile.neutral .add .sub { color: var(--muted); opacity: 1; }
+.tile.neutral .add .price { color: var(--gold); }
+.tile.neutral.has { border-style: solid; }
+.tile.neutral .ctl { border-top: 1px solid var(--line); }
+.tile.neutral .minus { background: var(--bg); color: var(--ink); }
 
 /* bottom bar */
 .bar {
@@ -135,7 +135,7 @@ h1 { font-family: var(--display); font-weight: 800; font-size: 1.15rem; line-hei
 .btn-ghost.armed { background: var(--wine); border-color: var(--wine); }
 .btn-main { background: var(--gold); color: #1a1204; padding: 0 16px; font-size: 1.1rem; }
 .btn-main:disabled { opacity: 0.4; }
-.iconbtn { width: 48px; height: 48px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); font-size: 1.3rem; }
+.iconbtn { width: 48px; height: 48px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); font-size: 1.3rem; flex: none; }
 
 /* summary + history views */
 .view { max-width: 720px; margin: 0 auto; }
@@ -147,7 +147,7 @@ h1 { font-family: var(--display); font-weight: 800; font-size: 1.15rem; line-hei
 .line { display: grid; grid-template-columns: 3.2ch minmax(0, 1fr) auto; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--line); align-items: baseline; font-size: 1.05rem; }
 .line:last-child { border-bottom: 0; }
 .line .q { font-weight: 800; font-family: var(--display); }
-.line .n { min-width: 0; }
+.line .n { min-width: 0; overflow-wrap: anywhere; }
 .line .n span { display: block; color: var(--muted); font-size: 0.8rem; }
 .line .a { font-weight: 700; text-align: right; }
 .line.neg .a { color: var(--pfand); }
@@ -172,7 +172,6 @@ h1 { font-family: var(--display); font-weight: 800; font-size: 1.15rem; line-hei
 .abtn.primary { background: var(--wine); color: var(--wine-ink); border-color: var(--wine); font-size: 1.2rem; }
 .viewhead { display: flex; align-items: center; gap: 10px; padding: 4px 0 10px; }
 .viewhead h2 { font-family: var(--display); font-weight: 800; font-size: clamp(1.1rem, 5vw, 1.4rem); margin: 0; flex: 1; min-width: 0; }
-.viewhead .iconbtn { flex: none; }
 .today { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .today b { font-family: var(--display); font-size: 1.4rem; }
 .today small { display: block; color: var(--muted); font-size: 0.78rem; }
@@ -181,7 +180,7 @@ h1 { font-family: var(--display); font-weight: 800; font-size: 1.15rem; line-hei
 .hitem .h1 { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
 .hitem .time { color: var(--muted); font-size: 0.88rem; }
 .hitem .sum { font-family: var(--display); font-weight: 800; font-size: 1.35rem; }
-.hitem .items { margin-top: 4px; font-size: 0.92rem; line-height: 1.45; }
+.hitem .items { margin-top: 4px; font-size: 0.92rem; line-height: 1.45; overflow-wrap: anywhere; }
 .hitem .edit { margin-top: 8px; height: 40px; padding: 0 14px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); font-weight: 600; }
 .empty { color: var(--muted); text-align: center; padding: 30px 10px; }
 .editing { background: var(--wine-soft); color: var(--wine); border-radius: 12px; padding: 8px 12px; font-size: 0.88rem; font-weight: 600; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
@@ -190,20 +189,122 @@ h1 { font-family: var(--display); font-weight: 800; font-size: 1.15rem; line-hei
 .danger { height: 44px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--wine); color: var(--wine); background: var(--surface); font-weight: 700; white-space: nowrap; }
 .danger:disabled { opacity: 0.35; }
 .danger.armed { background: var(--wine); color: var(--wine-ink); border-style: solid; border-color: var(--wine); }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } .add:active { transform: none; } }
-</style>
 
+/* PIN dialog */
+.modal { position: fixed; inset: 0; z-index: 20; background: rgba(5, 10, 7, 0.6); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.pinbox { background: var(--surface); color: var(--ink); border-radius: 22px; padding: 20px 18px 16px; width: 100%; max-width: 340px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.35); }
+.pinbox h3 { font-family: var(--display); font-weight: 800; font-size: 1.25rem; margin: 0; }
+.pinbox p { margin: 4px 0 0; color: var(--muted); font-size: 0.88rem; min-height: 1.3em; }
+.pinbox p.err { color: var(--wine); font-weight: 600; }
+.dots { display: flex; justify-content: center; gap: 12px; margin: 16px 0 18px; }
+.dots i { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--muted); }
+.dots i.on { background: var(--ink); border-color: var(--ink); }
+.dots.shake { animation: shake 0.35s; }
+@keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+.keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.keys button { height: 60px; border-radius: 14px; background: var(--bg); border: 1px solid var(--line); font: 800 1.5rem var(--display); }
+.keys button.fn { font: 600 1rem var(--body); color: var(--muted); }
+.keys button:active { background: var(--line); }
+
+/* admin view */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin-top: 12px; }
+.card > h3 { font-family: var(--display); font-weight: 800; font-size: 1.05rem; margin: 0 0 10px; }
+.card .hint { color: var(--muted); font-size: 0.82rem; margin: -4px 0 10px; line-height: 1.4; }
+.fld { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; min-width: 0; }
+.fld > span { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
+.fld input, .fld select { height: 46px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--bg); color: var(--ink); font: 600 1rem var(--body); padding: 0 10px; width: 100%; box-sizing: border-box; user-select: text; -webkit-user-select: text; outline: none; min-width: 0; }
+.fld input:focus, .fld select:focus { border-color: var(--gold); }
+.row { display: flex; gap: 10px; align-items: flex-end; }
+.row > .fld { flex: 1; }
+.row > .fld.sm { flex: 0 0 72px; }
+.row > .fld.md { flex: 0 0 110px; }
+.logorow { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.logorow img { width: 64px; height: 64px; border-radius: 14px; object-fit: cover; flex: none; border: 1px solid var(--line); }
+.logorow .btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.sbtn { height: 42px; padding: 0 14px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); font-weight: 600; font-size: 0.92rem; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.sbtn.primary { background: var(--wine); color: var(--wine-ink); border-color: var(--wine); }
+.sbtn.armed { background: var(--wine); color: var(--wine-ink); border-color: var(--wine); }
+.sbtn:disabled { opacity: 0.35; }
+.check { display: flex; align-items: center; gap: 10px; font-weight: 600; margin: 4px 0 10px; }
+.check input { width: 24px; height: 24px; accent-color: var(--wine); }
+.items { display: flex; flex-direction: column; gap: 10px; }
+.ied { border: 1px solid var(--line); border-radius: 14px; padding: 10px; background: var(--bg); }
+.ied .head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.ied .prev { flex: 1; min-width: 0; height: 40px; border-radius: 10px; display: flex; align-items: center; gap: 8px; padding: 0 10px; font-weight: 700; font-size: 0.9rem; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.ied .prev.neutral { background: var(--surface); color: var(--ink); border: 1px dashed var(--gold); }
+.ied .prev b { margin-left: auto; font-family: var(--display); }
+.ied .prev .nm { overflow: hidden; text-overflow: ellipsis; }
+.ied .mv { width: 40px; height: 40px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); font-size: 1.1rem; flex: none; }
+.ied .foot { display: flex; align-items: center; gap: 8px; }
+.ied .foot .pos { flex: 1; color: var(--muted); font-size: 0.8rem; }
+.ied .mv:disabled { opacity: 0.3; }
+.ied .del { width: auto; padding: 0 10px; color: var(--wine); border-color: var(--wine); font-weight: 700; font-size: 0.88rem; }
+.ied .del.armed { background: var(--wine); color: var(--wine-ink); }
+.ied .fld input, .ied .fld select { background: var(--surface); }
+.sw { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.sw button, .sw label { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--line); position: relative; flex: none; }
+.sw button.on, .sw label.on { outline: 3px solid var(--ink); outline-offset: 2px; }
+.sw .nt { background: var(--surface); border-style: dashed; border-color: var(--gold); font-size: 0.6rem; font-weight: 700; color: var(--muted); }
+.sw label { background: conic-gradient(#e53935, #fdd835, #43a047, #1e88e5, #8e24aa, #e53935); cursor: pointer; overflow: hidden; }
+.sw label input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+.addbtn { margin-top: 10px; width: 100%; height: 52px; border-radius: 12px; border: 2px dashed var(--line); font-weight: 700; color: var(--muted); }
+/* Bearbeiten-Modus direkt auf der Kasse */
+.adminbar { background: var(--ink); color: var(--bg); border-radius: 14px; padding: 10px 12px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.adminbar .txt { flex: 1 1 180px; min-width: 0; font-size: 0.85rem; line-height: 1.35; }
+.adminbar .txt b { display: block; font-family: var(--display); font-size: 1rem; }
+.adminbar button { height: 42px; padding: 0 14px; border-radius: 10px; font-weight: 700; white-space: nowrap; background: rgba(127,127,127,0.25); color: inherit; }
+.adminbar button.go { background: var(--gold); color: #1a1204; }
+body.admin .bar, body.admin #undoBtn, body.admin #toHistMain, body.admin #toAdmin, body.admin #editBanner { display: none !important; }
+body.admin .wrap { padding-bottom: 40px; }
+body.admin .tile { position: relative; }
+body.admin .tile .add { cursor: pointer; }
+body.admin .tile .add:active { transform: none; }
+.ectl { display: flex; align-items: stretch; gap: 4px; padding: 5px; }
+.ectl .handle { flex: 1; height: 42px; border-radius: 10px; background: var(--bg); color: var(--muted); font-size: 0.78rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 4px; touch-action: none; cursor: grab; }
+.ectl .handle .gr { font-size: 1.2rem; line-height: 1; letter-spacing: -2px; }
+.ectl .xdel { width: 44px; height: 42px; border-radius: 10px; background: var(--wine-soft); color: var(--wine); font-weight: 800; font-size: 1rem; white-space: nowrap; flex: none; }
+.ectl .xdel.armed { width: auto; padding: 0 8px; background: var(--wine); color: var(--wine-ink); font-size: 0.8rem; }
+.tile.dragging { opacity: 0.25; }
+.ghost { position: fixed; z-index: 40; pointer-events: none; box-shadow: 0 16px 40px rgba(0,0,0,0.35); transform: rotate(-2deg) scale(1.04); opacity: 0.95; margin: 0; }
+.tile.plus { border: 2px dashed var(--line); background: transparent; align-items: center; justify-content: center; min-height: 150px; color: var(--muted); font-weight: 700; gap: 4px; }
+.tile.plus b { font-size: 2rem; line-height: 1; font-family: var(--display); }
+@media (min-width: 600px) { .tile.plus { min-height: 176px; } }
+
+/* Kachel-Editor (Sheet) */
+.sheetwrap { position: fixed; inset: 0; z-index: 25; background: rgba(5, 10, 7, 0.55); display: flex; align-items: flex-end; justify-content: center; }
+@media (min-width: 600px) { .sheetwrap { align-items: center; padding: 16px; } }
+.sheet { background: var(--surface); color: var(--ink); width: 100%; max-width: 520px; max-height: 92vh; overflow-y: auto; border-radius: 22px 22px 0 0; padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px)); box-sizing: border-box; overscroll-behavior: contain; }
+@media (min-width: 600px) { .sheet { border-radius: 22px; } }
+.sheet h3 { font-family: var(--display); font-weight: 800; font-size: 1.2rem; margin: 0 0 12px; }
+.sheet .pv { display: flex; justify-content: center; margin-bottom: 14px; }
+.sheet .pv .tile { width: 150px; pointer-events: none; }
+.sheet .fld input, .sheet .fld select { background: var(--bg); }
+.sheet .acts { display: flex; gap: 8px; margin-top: 14px; }
+.sheet .acts .sp { flex: 1; }
+.sheet .acts .sbtn { height: 50px; font-size: 1rem; }
+.sheet .acts .del { color: var(--wine); border-color: var(--wine); }
+
+.toast { position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 12px 18px; border-radius: 12px; font-weight: 600; z-index: 30; max-width: calc(100% - 32px); text-align: center; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } .add:active { transform: none; } }
+</style>
 </head>
 <body>
 <!-- KASSE -->
-<div id="vMain" lang="de">
+<div id="vMain">
   <div class="wrap">
     <header class="top">
-      <img class="logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8ZGVmcz4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iYmciIGN4PSI1MCUiIGN5PSIzOCUiIHI9Ijc1JSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzJmNWE0NSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzEwMjQxYiIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0ibXVnIiB4MT0iMCIgeDI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNhMzIwMmYiLz48c3RvcCBvZmZzZXQ9IjAuNTUiIHN0b3AtY29sb3I9IiNjODMzM2YiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM3ZTE2MjMiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9IndpbmUiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjNmIwZjFkIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjM2QwNzEwIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGNsaXBQYXRoIGlkPSJjYW5lIj48cGF0aCBkPSJNMzE4IDE1MCBMMzE4IDcwIEEzNCAzNCAwIDAgMSAzODYgNzAgTDM4NiA4MiIgZmlsbD0ibm9uZSIvPjwvY2xpcFBhdGg+CiAgPC9kZWZzPgogIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJ1cmwoI2JnKSIvPgogIDwhLS0gc25vdyBkb3RzIC0tPgogIDxnIGZpbGw9IiNmZmZmZmYiIG9wYWNpdHk9IjAuNTUiPgogICAgPGNpcmNsZSBjeD0iNzAiIGN5PSI4MCIgcj0iNiIvPjxjaXJjbGUgY3g9IjE0MCIgY3k9IjQwIiByPSI0Ii8+PGNpcmNsZSBjeD0iNDQwIiBjeT0iNjAiIHI9IjUiLz48Y2lyY2xlIGN4PSI0NjAiIGN5PSIxNzAiIHI9IjQiLz4KICAgIDxjaXJjbGUgY3g9IjUwIiBjeT0iMjAwIiByPSI0Ii8+PGNpcmNsZSBjeD0iOTYiIGN5PSIxNDAiIHI9IjMiLz48Y2lyY2xlIGN4PSI0MjAiIGN5PSIxMjAiIHI9IjMiLz48Y2lyY2xlIGN4PSIyMDAiIGN5PSI3MCIgcj0iMyIvPgogIDwvZz4KICA8IS0tIHN0YXIgLS0+CiAgPHBhdGggZD0iTTEyMCA5NiBsOSAyMCAyMiAyIC0xNyAxNCA1IDIxIC0xOSAtMTEgLTE5IDExIDUgLTIxIC0xNyAtMTQgMjIgLTJ6IiBmaWxsPSIjZjJjMTRlIi8+CiAgPCEtLSBzdGVhbSAtLT4KICA8ZyBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMTIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC44Ij4KICAgIDxwYXRoIGQ9Ik0yMDAgMTkwIGMtMTggLTI0IDE4IC00MCAwIC02NiIvPgogICAgPHBhdGggZD0iTTI1MCAxODIgYy0xOCAtMjQgMTggLTQwIDAgLTY2Ii8+CiAgPC9nPgogIDwhLS0gaGFuZGxlIC0tPgogIDxwYXRoIGQ9Ik0zNTIgMjYwIGgyNiBhNDYgNDYgMCAwIDEgMCA5MiBoLTI2IiBmaWxsPSJub25lIiBzdHJva2U9IiM4ZjFkMmMiIHN0cm9rZS13aWR0aD0iMjYiLz4KICA8IS0tIG11ZyBib2R5IC0tPgogIDxwYXRoIGQ9Ik0xMjAgMjMwIGgyNDggdjEzMCBhNjIgNjIgMCAwIDEgLTYyIDYyIGgtMTI0IGE2MiA2MiAwIDAgMSAtNjIgLTYyeiIgZmlsbD0idXJsKCNtdWcpIi8+CiAgPCEtLSByaW0gKyB3aW5lIC0tPgogIDxlbGxpcHNlIGN4PSIyNDQiIGN5PSIyMzAiIHJ4PSIxMjQiIHJ5PSIyMiIgZmlsbD0iI2U5ZWNlYSIvPgogIDxlbGxpcHNlIGN4PSIyNDQiIGN5PSIyMzIiIHJ4PSIxMTAiIHJ5PSIxNSIgZmlsbD0idXJsKCN3aW5lKSIvPgogIDwhLS0gb3JhbmdlIHNsaWNlIC0tPgogIDxjaXJjbGUgY3g9IjE5MCIgY3k9IjIyNiIgcj0iMjQiIGZpbGw9IiNmMzlhMmIiLz48Y2lyY2xlIGN4PSIxOTAiIGN5PSIyMjYiIHI9IjE3IiBmaWxsPSIjZmZjMTYzIi8+CiAgPGcgc3Ryb2tlPSIjZjM5YTJiIiBzdHJva2Utd2lkdGg9IjIuNSI+PGxpbmUgeDE9IjE5MCIgeTE9IjIwOSIgeDI9IjE5MCIgeTI9IjI0MyIvPjxsaW5lIHgxPSIxNzMiIHkxPSIyMjYiIHgyPSIyMDciIHkyPSIyMjYiLz48bGluZSB4MT0iMTc4IiB5MT0iMjE0IiB4Mj0iMjAyIiB5Mj0iMjM4Ii8+PGxpbmUgeDE9IjIwMiIgeTE9IjIxNCIgeDI9IjE3OCIgeTI9IjIzOCIvPjwvZz4KICA8IS0tIGNhbmR5IGNhbmUgLS0+CiAgPGc+CiAgICA8cGF0aCBkPSJNMzAwIDIzNiBMMzAwIDEyMCBBMzQgMzQgMCAwIDEgMzY4IDEyMCBMMzY4IDE0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICAgIDxwYXRoIGQ9Ik0zMDAgMjM2IEwzMDAgMTIwIEEzNCAzNCAwIDAgMSAzNjggMTIwIEwzNjggMTQwIiBmaWxsPSJub25lIiBzdHJva2U9IiNkNjI4MzkiIHN0cm9rZS13aWR0aD0iMjIiIHN0cm9rZS1saW5lY2FwPSJidXR0IiBzdHJva2UtZGFzaGFycmF5PSIxNCAxNCIvPgogIDwvZz4KICA8IS0tIHJpbSBmcm9udCBlZGdlIG92ZXIgY2FuZSAtLT4KICA8cGF0aCBkPSJNMTIwIDIzMCBhMTI0IDIyIDAgMCAwIDI0OCAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNlOWVjZWEiIHN0cm9rZS13aWR0aD0iNiIvPgogIDwhLS0gc25vd2ZsYWtlIGRlY29yIG9uIG11ZyAtLT4KICA8ZyBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iNyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBvcGFjaXR5PSIwLjkiPgogICAgPGxpbmUgeDE9IjI0NCIgeTE9IjI5MCIgeDI9IjI0NCIgeTI9IjM3MiIvPjxsaW5lIHgxPSIyMDgiIHkxPSIzMTAiIHgyPSIyODAiIHkyPSIzNTIiLz48bGluZSB4MT0iMjA4IiB5MT0iMzUyIiB4Mj0iMjgwIiB5Mj0iMzEwIi8+CiAgPC9nPgogIDwhLS0gc2hpbmUgLS0+CiAgPHBhdGggZD0iTTE0NiAyNjIgdjg2IiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMTIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC4yNSIvPgo8L3N2Zz4K" alt="" width="40" height="40">
-      <div class="ttl"><h1>Zunfthaus-Rechner</h1><span class="pfandnote">Preise inkl. 4,50 € Pfand</span></div>
+      <img class="logo" id="logoImg" src="icon.svg" alt="" width="40" height="40">
+      <div class="ttl"><h1 id="appTitle">Zunfthaus-Rechner</h1><span class="pfandnote" id="appSub"></span></div>
       <button class="tbtn" id="undoBtn" disabled aria-label="Letzten Tipp rückgängig machen"><span class="ic">↶</span><span class="lbl">Rückgängig</span></button>
       <button class="tbtn" id="toHistMain" aria-label="Letzte Bestellungen"><span class="ic">🕘</span></button>
+      <button class="tbtn" id="themeBtn" aria-label="Hell oder dunkel umschalten"><span class="ic" id="themeIc">☾</span></button>
+      <button class="tbtn" id="toAdmin" aria-label="Admin-Modus"><span class="ic">⚙︎</span></button>
     </header>
+    <div id="adminBar" class="adminbar" hidden>
+      <div class="txt"><b>Bearbeiten-Modus</b>Kachel antippen zum Ändern, an ⠿ ziehen zum Verschieben.</div>
+      <button id="toSettings">⚙︎ App &amp; PIN</button>
+      <button class="go" id="editDone">Fertig</button>
+    </div>
     <div id="editBanner" class="editing" hidden><span>Du bearbeitest eine gespeicherte Bestellung</span><button id="editCancel">Abbrechen</button></div>
     <div class="grid" id="grid"></div>
   </div>
@@ -253,102 +354,289 @@ h1 { font-family: var(--display); font-weight: 800; font-size: 1.15rem; line-hei
   </div>
 </div>
 
+<!-- ADMIN -->
+<div id="vAdmin" hidden>
+  <div class="wrap view" style="padding-bottom:40px">
+    <div class="viewhead">
+      <button class="iconbtn" id="adminBack" aria-label="Zurück zur Kasse">‹</button>
+      <h2>App-Einstellungen</h2>
+      <button class="sbtn primary" id="adminDone">Zurück zu den Kacheln</button>
+    </div>
+    <div class="cups" style="margin-top:0">Änderungen werden sofort auf diesem Gerät gespeichert.</div>
+
+    <section class="card">
+      <h3>App</h3>
+      <div class="logorow">
+        <img id="admLogo" src="icon.svg" alt="App-Logo">
+        <div class="btns">
+          <button class="sbtn" id="logoPick">🖼 Logo hochladen</button>
+          <button class="sbtn" id="logoReset">Standard-Logo</button>
+          <input type="file" id="logoFile" accept="image/*" hidden>
+        </div>
+      </div>
+      <label class="fld"><span>Name der App</span><input id="admName" maxlength="40" autocomplete="off"></label>
+      <label class="fld"><span>Untertitel (leer = Pfand-Hinweis automatisch)</span><input id="admSub" maxlength="60" autocomplete="off"></label>
+    </section>
+
+    <section class="card">
+      <h3>PIN ändern</h3>
+      <div class="row">
+        <label class="fld"><span>Neue PIN (4–6 Ziffern)</span><input id="pinNew" type="password" inputmode="numeric" maxlength="6" autocomplete="off"></label>
+        <label class="fld"><span>Wiederholen</span><input id="pinNew2" type="password" inputmode="numeric" maxlength="6" autocomplete="off"></label>
+      </div>
+      <button class="sbtn" id="pinSave">PIN speichern</button>
+    </section>
+
+    <section class="card">
+      <h3>Sichern und Zurücksetzen</h3>
+      <p class="hint">Einstellungen als Datei speichern, um sie auf ein anderes Gerät zu übertragen. Die PIN wird nicht mit gespeichert.</p>
+      <div class="logorow" style="margin:0;flex-wrap:wrap">
+        <div class="btns">
+          <button class="sbtn" id="expBtn">⬇ Exportieren</button>
+          <button class="sbtn" id="impBtn">⬆ Importieren</button>
+          <input type="file" id="impFile" accept="application/json,.json" hidden>
+          <button class="sbtn" id="resetBtn">Auf Standard zurücksetzen</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- PIN -->
+<div class="modal" id="pinModal" hidden>
+  <div class="pinbox" role="dialog" aria-modal="true" aria-labelledby="pinTitle">
+    <h3 id="pinTitle">Admin-PIN</h3>
+    <p id="pinMsg">PIN eingeben</p>
+    <div class="dots" id="pinDots"></div>
+    <div class="keys" id="pinKeys"></div>
+  </div>
+</div>
+
+<!-- KACHEL-EDITOR -->
+<div class="sheetwrap" id="sheet" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="shTitle">
+    <h3 id="shTitle">Kachel bearbeiten</h3>
+    <div class="pv" id="shPrev"></div>
+    <div id="shItemFields">
+      <div class="row">
+        <label class="fld sm"><span>Symbol</span><input id="shIcons" maxlength="12" autocomplete="off" placeholder="🍷"></label>
+        <label class="fld"><span>Name</span><input id="shName" maxlength="60" autocomplete="off" placeholder="z. B. Glühwein"></label>
+      </div>
+    </div>
+    <div class="row">
+      <label class="fld md"><span id="shPriceLbl">Preis (€)</span><input id="shPrice" inputmode="decimal" autocomplete="off" placeholder="9,50"></label>
+      <label class="fld" id="shTypeFld"><span>Art</span><select id="shType">
+        <option value="becher">Mit Becher (inkl. Pfand)</option><option value="ohne">Ohne Pfand</option><option value="aufpreis">Aufpreis (+)</option><option value="pfand" id="shTypePfand">Pfand zurück</option>
+      </select></label>
+    </div>
+    <p class="hint" id="shHint" style="color:var(--muted);font-size:0.8rem;margin:-4px 0 10px"></p>
+    <div class="fld"><span>Farbe</span><div class="sw" id="shColors"></div></div>
+    <div class="acts">
+      <button class="sbtn del" id="shDel">🗑 Löschen</button>
+      <span class="sp"></span>
+      <button class="sbtn" id="shCancel">Abbrechen</button>
+      <button class="sbtn primary" id="shSave">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
 <script>
 (function () {
-  var PFAND = 450; // Cent
-  // Preise in Cent, inkl. Pfand. Gruppen gleicher Preise zusammengefasst.
-  var BIG = [
-    { id: "gluehwein",icons: "🍷🥚", name: "Glühwein rot · Eierpunsch",     short: "Glühwein / Eierpunsch",price: 950 },
-    { id: "heidel",   icons: "🫐",   name: "Heidelbeer-Glühwein",           short: "Heidelbeer",           price: 1000 },
-    { id: "zunft",    icons: "🍎",   name: "Zunfttrunk",                    short: "Zunfttrunk",           price: 1050 },
-    { id: "rum",      icons: "🍷🥃", name: "GW Rot / Kakao mit Shot",       short: "GW Rot / Kakao mit Shot", price: 1100 },
-    { id: "koelsch",  icons: "🍺☕", name: "Kölsch · Kakao",                short: "Kölsch / Kakao",       price: 850 },
-    { id: "frucht",   icons: "🍹",   name: "Früchtepunsch",                 short: "Früchtepunsch",        price: 900 },
-    { id: "fzb",      icons: "🔥",   name: "Feuerzangenbowle",              short: "Feuerzangenbowle",     price: 1250 },
-    { id: "wein",     icons: "🥂",   name: "Wein Graub. · Rot · Rosé",      short: "Wein",                 price: 1300 },
-    { id: "pfand",    icons: "↩️",   name: "Pfand zurück",                  short: "Pfand zurück",         price: -PFAND, pfand: true }
-  ];
-  var SMALL = [
-    { id: "limo",  name: "Limo · Wasser · Schorle · Shot", short: "Limo / Wasser / Schorle / Shot", price: 350 },
-    { id: "kaugummi", name: "Kaugummi", short: "Kaugummi", price: 380 },
-    { id: "schuss", icons: "🥃", name: "+ Schuss", short: "+ Schuss (Aufpreis)", price: 150, extra: true }
-  ];
-  var ALL = BIG.concat(SMALL);
-  var byId = {}; ALL.forEach(function (p) { byId[p.id] = p; });
-
+  // ---------- Einstellungen (nur auf diesem Gerät) ----------
+  var KEY_CFG = "wmr.config.v1", KEY_PIN = "wmr.pin.v1", KEY_THEME = "wmr.theme.v1";
   var KEY_CUR = "wmr.current.v1", KEY_HIST = "wmr.history.v1", KEY_EDIT = "wmr.editing.v1";
   function load(k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
-  function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
 
+  var SWATCHES = ["#8f1d2c", "#c62828", "#b5541c", "#b7851f", "#1f6b52", "#2e6e8e", "#3d3f8f", "#6a2c70", "#5b4636", "#37474f"];
+  // type: "becher" = Getränk im Pfandbecher, "ohne" = ohne Pfand, "aufpreis" = Zuschlag (+)
+  function defaults() {
+    return {
+      name: "Zunfthaus-Rechner", sub: "", logo: null, pfand: 450,
+      items: [
+        { id: "gluehwein", icons: "🍷🥚", name: "Glühwein rot · Eierpunsch", price: 950,  color: "#8f1d2c", type: "becher" },
+        { id: "heidel",    icons: "🫐",   name: "Heidelbeer-Glühwein",       price: 1000, color: "#8f1d2c", type: "becher" },
+        { id: "zunft",     icons: "🍎",   name: "Zunfttrunk",                price: 1050, color: "#8f1d2c", type: "becher" },
+        { id: "rum",       icons: "🍷🥃", name: "GW Rot / Kakao mit Shot",   price: 1100, color: "#8f1d2c", type: "becher" },
+        { id: "koelsch",   icons: "🍺☕", name: "Kölsch · Kakao",            price: 850,  color: "#8f1d2c", type: "becher" },
+        { id: "frucht",    icons: "🍹",   name: "Früchtepunsch",             price: 900,  color: "#8f1d2c", type: "becher" },
+        { id: "fzb",       icons: "🔥",   name: "Feuerzangenbowle",          price: 1250, color: "#8f1d2c", type: "becher" },
+        { id: "wein",      icons: "🥂",   name: "Wein Graub. · Rot · Rosé",  price: 1300, color: "#8f1d2c", type: "becher" },
+        { id: "schuss",    icons: "🥃",   name: "+ Schuss",                  price: 150,  color: "#c62828", type: "aufpreis" },
+        { id: "limo",      icons: "",     name: "Limo · Wasser · Schorle · Shot", price: 350, color: "", type: "ohne" },
+        { id: "kaugummi",  icons: "",     name: "Kaugummi",                  price: 380,  color: "", type: "ohne" },
+        { id: "pfand",     icons: "↩️",   name: "Pfand zurück",              price: 0,    color: "#1f6b52", type: "pfand" }
+      ]
+    };
+  }
+  function cleanColor(c) { return typeof c === "string" && /^#[0-9a-fA-F]{6}$/.test(c) ? c.toLowerCase() : ""; }
+  function sanitize(c) {
+    var d = defaults();
+    if (!c || typeof c !== "object") return d;
+    var out = {
+      name: typeof c.name === "string" && c.name.trim() ? c.name.slice(0, 40) : d.name,
+      sub: typeof c.sub === "string" ? c.sub.slice(0, 60) : "",
+      logo: typeof c.logo === "string" && /^data:image\//.test(c.logo) ? c.logo : null,
+      pfand: Number.isFinite(c.pfand) && c.pfand >= 0 ? Math.round(c.pfand) : d.pfand,
+      items: []
+    };
+    var seen = {};
+    (Array.isArray(c.items) ? c.items : d.items).forEach(function (it) {
+      if (!it || typeof it !== "object") return;
+      var isPfand = it.type === "pfand";
+      if (isPfand && seen.pfand) return; // nur eine Pfand-Kachel
+      var id = isPfand ? "pfand" : typeof it.id === "string" && it.id && it.id !== "pfand" && !seen[it.id] ? it.id : uid();
+      seen[id] = 1;
+      out.items.push({
+        id: id,
+        icons: typeof it.icons === "string" ? it.icons.slice(0, 12) : "",
+        name: typeof it.name === "string" ? it.name.slice(0, 60) : "",
+        price: isPfand ? 0 : Number.isFinite(it.price) ? Math.round(it.price) : 0,
+        color: cleanColor(it.color),
+        type: isPfand || it.type === "ohne" || it.type === "aufpreis" ? it.type : "becher"
+      });
+    });
+    // ältere Einstellungen: Pfand-Kachel lag fest am Ende und hatte eigene Felder
+    if (Array.isArray(c.items) && !seen.pfand && c.pfandTile !== false && !c.items.some(function (it) { return it && it.type === "pfand"; }))
+      out.items.push({ id: "pfand", icons: "↩️", name: "Pfand zurück", price: 0, color: cleanColor(c.pfandColor) || "#1f6b52", type: "pfand" });
+    return out;
+  }
+  function uid() { return "i" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+  var cfg = sanitize(load(KEY_CFG, null));
+  function saveCfg() {
+    if (!save(KEY_CFG, cfg)) toast("Speichern fehlgeschlagen. Ist das Logo zu groß?");
+  }
+  function getPin() { var p = load(KEY_PIN, null); return typeof p === "string" && /^\d{4,6}$/.test(p) ? p : "1111"; }
+
+  // Produkte, die aktuell auf der Kasse sind (inkl. Pfand zurück)
+  var ALL = [], byId = {};
+  function rebuildProducts() {
+    ALL = cfg.items.map(function (p) {
+      return p.type === "pfand" ? { id: "pfand", icons: p.icons, name: p.name || "Pfand zurück", price: -cfg.pfand, color: p.color, type: "pfand" } : p;
+    });
+    byId = {}; ALL.forEach(function (p) { byId[p.id] = p; });
+  }
+  rebuildProducts();
+
+  // ---------- Bestellung + Historie ----------
   var counts = load(KEY_CUR, {});
+  if (!counts || typeof counts !== "object") counts = {};
   var history = load(KEY_HIST, []);
+  if (!Array.isArray(history)) history = [];
+  // ältere Zunfthaus-Bestellungen (nur "counts") in das neue Format mit "lines" übernehmen
+  history.forEach(function (h) { if (h && !Array.isArray(h.lines) && h.counts && typeof h.counts === "object") h.lines = snapshotLines(h.counts); });
   var KEEP_MS = 48 * 60 * 60 * 1000; // Bestellungen älter als 48 Stunden werden automatisch gelöscht
   function prune() {
     var cut = Date.now() - KEEP_MS, n = history.length;
-    history = history.filter(function (h) { return h && h.ts >= cut; });
+    history = history.filter(function (h) { return h && h.ts >= cut && Array.isArray(h.lines); });
     if (history.length !== n) save(KEY_HIST, history);
   }
   prune();
+  function pruneCounts() { for (var k in counts) if (!byId[k] || !(counts[k] > 0)) delete counts[k]; }
+  pruneCounts();
   var editingId = load(KEY_EDIT, null);
   var given = null;
-  var undoStack = []; // Schnappschüsse vor jeder Änderung
+  var undoStack = [];
   function snap() { undoStack.push(JSON.stringify(counts)); if (undoStack.length > 100) undoStack.shift(); }
-  function bump(id) { var c = $("c-" + id); if (!c) return; c.classList.remove("bump"); void c.offsetWidth; c.classList.add("bump"); }
+  function bump(id) { var c = document.querySelector('[data-count="' + cssEsc(id) + '"]'); if (!c) return; c.classList.remove("bump"); void c.offsetWidth; c.classList.add("bump"); }
 
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function cssEsc(s) { return String(s).replace(/["\\]/g, "\\$&"); }
   function eur(c) {
     var neg = c < 0; c = Math.abs(c);
     return (neg ? "−" : "") + Math.floor(c / 100) + "," + String(c % 100).padStart(2, "0") + " €";
   }
+  function eurPlain(c) { return (c / 100).toFixed(2).replace(".", ","); }
+  function parseEur(v) {
+    v = String(v).replace(/[^0-9,\.\-]/g, "").replace(",", ".");
+    var n = parseFloat(v); return v === "" || isNaN(n) ? null : Math.round(n * 100);
+  }
   function total(cs) { var t = 0; for (var k in cs) if (byId[k]) t += cs[k] * byId[k].price; return t; }
   function itemCount(cs) { var n = 0; for (var k in cs) n += cs[k]; return n; }
   function buzz() { try { navigator.vibrate && navigator.vibrate(12); } catch (e) {} }
-  function $(id) { return document.getElementById(id); }
+  function inkFor(hex) {
+    if (!hex) return "";
+    var r = parseInt(hex.substr(1, 2), 16) / 255, g = parseInt(hex.substr(3, 2), 16) / 255, b = parseInt(hex.substr(5, 2), 16) / 255;
+    function lin(x) { return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); }
+    var L = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+    return L > 0.4 ? "#17231d" : "#ffffff";
+  }
+  var toastT = null;
+  function toast(msg) { var t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(function () { t.hidden = true; }, 2600); }
+
+  // ---------- Kopf (Name, Logo) ----------
+  function subText() {
+    if (cfg.sub.trim()) return cfg.sub;
+    var anyCup = cfg.items.some(function (p) { return p.type === "becher"; });
+    return cfg.pfand > 0 && anyCup ? "Preise inkl. " + eur(cfg.pfand) + " Pfand" : "";
+  }
+  function applyBranding() {
+    $("appTitle").textContent = cfg.name;
+    $("appSub").textContent = subText();
+    document.title = cfg.name;
+    $("metaAppTitle").setAttribute("content", cfg.name);
+    var src = cfg.logo || "icon.svg";
+    $("logoImg").src = src; $("admLogo").src = src;
+    $("linkIcon").href = src;
+    $("linkTouch").href = cfg.logo || "apple-touch-icon.png";
+  }
 
   // ---------- Kasse ----------
-  function bigTile(p) {
+  function tile(p) {
     var t = document.createElement("div");
-    t.className = "tile" + (p.pfand ? " pfand" : ""); t.id = "t-" + p.id;
+    t.className = "tile" + (p.color ? "" : " neutral");
+    t.dataset.tile = p.id;
+    if (p.color) {
+      var ink = inkFor(p.color);
+      t.style.setProperty("--c", p.color);
+      t.style.setProperty("--ci", ink);
+      t.style.setProperty("--ct", ink === "#ffffff" ? "color-mix(in srgb, " + p.color + " 55%, var(--ink))" : "var(--ink)");
+    }
+    var sub = p.type === "aufpreis" ? "Aufpreis" : (p.type === "ohne" && cfg.pfand > 0 ? "ohne Pfand" : "");
+    var nm = p.name || "Ohne Namen";
     t.innerHTML =
-      '<button class="add" data-add="' + p.id + '" aria-label="' + p.name + ' hinzufügen">' +
-        '<span class="icons" aria-hidden="true">' + p.icons + '</span>' +
-        '<span class="name">' + p.name.replace("Feuerzangenbowle", "Feuerzangen&shy;bowle").replace("Heidelbeer-Glühwein", "Heidelbeer-&#8203;Glühwein").replace("Früchtepunsch", "Früchte&shy;punsch").replace("GW Rot / Kakao mit Shot", "<span class=\"nw\">GW Rot /</span> <span class=\"nw\">Kakao mit Shot</span>") + '</span>' +
-        (p.extra ? '<span class="sub">Aufpreis</span>' : '') +
-        '<span class="price">' + (p.extra ? '+' : '') + eur(p.price) + '</span>' +
+      '<button class="add" data-add="' + esc(p.id) + '" aria-label="' + esc(nm) + ' hinzufügen">' +
+        (p.icons ? '<span class="icons" aria-hidden="true">' + esc(p.icons) + '</span>' : '') +
+        '<span class="name' + (nm.length > 22 ? ' long' : '') + '" lang="de">' + esc(nm) + '</span>' +
+        (sub ? '<span class="sub">' + sub + '</span>' : '') +
+        '<span class="price">' + (p.type === "aufpreis" ? '+' : '') + eur(p.price) + '</span>' +
       '</button>' +
-      '<div class="ctl"><span class="count" id="c-' + p.id + '">0</span>' +
-      '<button class="minus" data-sub="' + p.id + '" aria-label="Eins weniger">−</button></div>';
+      (adminMode
+        ? '<div class="ectl"><span class="handle" data-drag="' + esc(p.id) + '" aria-label="Ziehen zum Verschieben"><span class="gr">⠿</span> Ziehen</span>' +
+          '<button class="xdel" data-del="' + esc(p.id) + '" aria-label="' + esc(nm) + ' löschen">✕</button></div>'
+        : '<div class="ctl"><span class="count" data-count="' + esc(p.id) + '">0</span>' +
+          '<button class="minus" data-sub="' + esc(p.id) + '" aria-label="Eins weniger">−</button></div>');
     return t;
   }
-  function miniTile(p) {
-    var t = document.createElement("div");
-    t.className = "tile mini"; t.id = "t-" + p.id;
-    t.innerHTML =
-      '<button class="add" data-add="' + p.id + '" aria-label="' + p.name + ' hinzufügen">' +
-        '<span class="name">' + p.name + '</span><span class="sub">ohne Pfand</span>' +
-        '<span class="price">' + eur(p.price) + '</span></button>' +
-      '<div class="ctl"><span class="count" id="c-' + p.id + '">0</span>' +
-      '<button class="minus" data-sub="' + p.id + '" aria-label="Eins weniger">−</button></div>';
-    return t;
-  }
-  // Reihenfolge: Getränke, + Schuss (rot), kleine Artikel ohne Pfand, Pfand zurück
   function buildTiles() {
     var g = $("grid"); g.innerHTML = "";
-    BIG.forEach(function (p) { if (!p.pfand) g.appendChild(bigTile(p)); });
-    SMALL.forEach(function (p) { if (p.extra) g.appendChild(bigTile(p)); });
-    SMALL.forEach(function (p) { if (!p.extra) g.appendChild(miniTile(p)); });
-    BIG.forEach(function (p) { if (p.pfand) g.appendChild(bigTile(p)); });
+    var list = ALL;
+    if (adminMode) {
+      list.forEach(function (p) { g.appendChild(tile(p)); });
+      var plus = document.createElement("button"); plus.className = "tile plus"; plus.id = "plusTile";
+      plus.innerHTML = '<b>+</b>Kachel hinzufügen';
+      g.appendChild(plus);
+      return;
+    }
+    list.forEach(function (p) { g.appendChild(tile(p)); });
+    if (!list.length) g.innerHTML = '<div class="empty" style="grid-column:1/-1">Noch keine Getränke. Über ⚙︎ (Admin) hinzufügen.</div>';
   }
 
   function renderMain() {
     ALL.forEach(function (p) {
       var n = counts[p.id] || 0;
-      var c = $("c-" + p.id); c.textContent = n; c.classList.toggle("zero", n === 0);
-      $("t-" + p.id).classList.toggle("has", n > 0);
-      $("t-" + p.id).querySelector(".minus").disabled = n === 0;
+      var t = document.querySelector('[data-tile="' + cssEsc(p.id) + '"]'); if (!t) return;
+      var c = t.querySelector(".count"); if (!c) return; c.textContent = n; c.classList.toggle("zero", n === 0);
+      t.classList.toggle("has", n > 0);
+      t.querySelector(".minus").disabled = n === 0;
     });
     var t = total(counts);
     $("totVal").textContent = eur(t);
-    var n = 0; for (var k in counts) if (byId[k] && byId[k].price > 0 && !byId[k].extra) n += counts[k];
+    var n = 0; for (var k in counts) if (byId[k] && byId[k].price > 0 && byId[k].type !== "aufpreis") n += counts[k];
     $("totLabel").textContent = (t < 0 ? "Auszahlen" : "Summe") + (n ? " · " + n + " Stk." : "");
     $("undoBtn").disabled = undoStack.length === 0;
     $("sumBtn").disabled = itemCount(counts) === 0;
@@ -356,15 +644,16 @@ h1 { font-family: var(--display); font-weight: 800; font-size: 1.15rem; line-hei
     save(KEY_CUR, counts);
   }
 
-  document.addEventListener("click", function (e) {
+  $("grid").addEventListener("click", function (e) {
+    if (adminMode) return adminClick(e);
     var a = e.target.closest("[data-add]"), s = e.target.closest("[data-sub]");
     if (a) { var id = a.dataset.add; snap(); counts[id] = (counts[id] || 0) + 1; buzz(); disarm(); renderMain(); bump(id); }
     else if (s) { var id2 = s.dataset.sub; if (counts[id2]) { snap(); counts[id2]--; if (!counts[id2]) delete counts[id2]; buzz(); bump(id2); } disarm(); renderMain(); }
   });
 
-  // Zwei-Tipp-Bestätigung für Löschen
+  // Zwei-Tipp-Bestätigung
   var armTimer = null;
-  function arm(btn, label) { btn.classList.add("armed"); btn.dataset.orig = btn.dataset.orig || btn.textContent; btn.textContent = label; clearTimeout(armTimer); armTimer = setTimeout(function(){ disarm(); }, 3000); }
+  function arm(btn, label) { disarm(); btn.classList.add("armed"); btn.dataset.orig = btn.textContent; btn.textContent = label; clearTimeout(armTimer); armTimer = setTimeout(function(){ disarm(); }, 3000); }
   function disarm() { document.querySelectorAll(".armed").forEach(function (b) { b.classList.remove("armed"); if (b.dataset.orig) b.textContent = b.dataset.orig; }); }
 
   $("clearBtn").addEventListener("click", function () {
@@ -372,31 +661,35 @@ h1 { font-family: var(--display); font-weight: 800; font-size: 1.15rem; line-hei
     if (b.classList.contains("armed")) { snap(); counts = {}; disarm(); renderMain(); buzz(); }
     else if (itemCount(counts) > 0 || editingId) arm(b, "Sicher?");
   });
-
   $("undoBtn").addEventListener("click", function () {
     if (!undoStack.length) return;
-    counts = JSON.parse(undoStack.pop()); disarm(); buzz(); renderMain();
+    counts = JSON.parse(undoStack.pop()); pruneCounts(); disarm(); buzz(); renderMain();
   });
   $("editCancel").addEventListener("click", function () {
     counts = {}; editingId = null; save(KEY_EDIT, null); undoStack = []; renderMain();
   });
 
   // ---------- Ansichten ----------
+  var current = "main";
   function show(v) {
-    $("vMain").hidden = v !== "main"; $("vSum").hidden = v !== "sum"; $("vHist").hidden = v !== "hist";
+    current = v;
+    ["main", "sum", "hist", "admin"].forEach(function (x) { $("v" + x.charAt(0).toUpperCase() + x.slice(1)).hidden = v !== x; });
+    disarm();
     window.scrollTo(0, 0);
-    if (v === "sum") renderSum(); if (v === "hist") renderHist(); if (v === "main") renderMain();
+    if (v === "sum") renderSum(); if (v === "hist") renderHist(); if (v === "main") renderMain(); if (v === "admin") renderAdmin();
   }
 
-  function linesHtml(cs) {
-    var out = "";
-    ALL.forEach(function (p) {
-      var n = cs[p.id]; if (!n) return;
-      out += '<div class="line' + (p.price < 0 ? " neg" : "") + '"><span class="q">' + n + '×</span>' +
-        '<span class="n">' + p.short + '<span>je ' + eur(p.price) + '</span></span>' +
-        '<span class="a">' + eur(n * p.price) + '</span></div>';
-    });
+  function snapshotLines(cs) {
+    var out = [];
+    ALL.forEach(function (p) { if (cs[p.id]) out.push({ id: p.id, name: p.name, price: p.price, type: p.type, n: cs[p.id] }); });
     return out;
+  }
+  function linesHtml(lines) {
+    return lines.map(function (l) {
+      return '<div class="line' + (l.price < 0 ? " neg" : "") + '"><span class="q">' + l.n + '×</span>' +
+        '<span class="n">' + esc(l.name) + '<span>je ' + (l.type === "aufpreis" ? "+" : "") + eur(l.price) + '</span></span>' +
+        '<span class="a">' + eur(l.n * l.price) + '</span></div>';
+    }).join("");
   }
 
   var CASH = [500, 1000, 2000, 5000, 10000];
@@ -405,12 +698,12 @@ h1 { font-family: var(--display); font-weight: 800; font-size: 1.15rem; line-hei
     $("sumAmount").textContent = eur(Math.abs(t));
     $("sumLabel").textContent = t < 0 ? "Auszahlen an Kunde" : "Zu zahlen";
     $("bigsum").classList.toggle("payout", t < 0);
-    $("sumLines").innerHTML = linesHtml(counts);
+    $("sumLines").innerHTML = linesHtml(snapshotLines(counts));
     $("changeBox").hidden = t <= 0;
     var out = 0, back = counts.pfand || 0;
-    BIG.forEach(function (p) { if (!p.pfand) out += counts[p.id] || 0; });
+    ALL.forEach(function (p) { if (p.type === "becher") out += counts[p.id] || 0; });
     var cupTxt = [];
-    if (out) cupTxt.push(out + " Becher raus");
+    if (out && cfg.pfand > 0) cupTxt.push(out + " Becher raus");
     if (back) cupTxt.push(back + " Becher zurück");
     $("cups").textContent = cupTxt.join(" · ");
     var ch = $("chips"); ch.innerHTML = "";
@@ -432,18 +725,15 @@ h1 { font-family: var(--display); font-weight: 800; font-size: 1.15rem; line-hei
 
   function commitOrder() {
     if (itemCount(counts) === 0) return;
-    var entry = { id: editingId || String(Date.now()), ts: Date.now(), counts: counts, total: total(counts) };
-    if (editingId) {
-      var i = history.findIndex(function (h) { return h.id === editingId; });
-      if (i >= 0) { entry.ts = history[i].ts; history[i] = entry; } else history.unshift(entry);
-    } else history.unshift(entry);
+    var entry = { id: editingId || String(Date.now()), ts: Date.now(), counts: counts, lines: snapshotLines(counts), total: total(counts) };
+    var i = editingId ? history.findIndex(function (h) { return h.id === editingId; }) : -1;
+    if (i >= 0) { entry.ts = history[i].ts; history[i] = entry; } else history.unshift(entry);
     prune();
     history = history.slice(0, 300);
     save(KEY_HIST, history);
   }
 
   $("sumBtn").addEventListener("click", function () { if (itemCount(counts)) { given = null; $("givenInput").value = ""; show("sum"); } });
-  // Freier Betrag: "70", "70,50" oder "70.5"
   $("givenInput").addEventListener("input", function () {
     var v = this.value.replace(/[^0-9,\.]/g, "").replace(",", ".");
     var n = parseFloat(v);
@@ -456,9 +746,9 @@ h1 { font-family: var(--display); font-weight: 800; font-size: 1.15rem; line-hei
   $("newBtn").addEventListener("click", function () {
     commitOrder(); counts = {}; editingId = null; given = null; undoStack = []; save(KEY_EDIT, null); buzz(); show("main");
   });
+  var histReturn = "main";
   $("toHistSum").addEventListener("click", function () { histReturn = "sum"; show("hist"); });
   $("toHistMain").addEventListener("click", function () { histReturn = "main"; show("hist"); });
-  var histReturn = "main";
   $("histBack").addEventListener("click", function () { show(histReturn === "sum" && itemCount(counts) ? "sum" : "main"); });
 
   // ---------- Historie ----------
@@ -468,11 +758,6 @@ h1 { font-family: var(--display); font-weight: 800; font-size: 1.15rem; line-hei
     if (d.toDateString() === now.toDateString()) return "Heute, " + hm + " Uhr";
     return d.getDate() + "." + (d.getMonth() + 1) + "., " + hm + " Uhr";
   }
-  function itemsText(cs) {
-    var parts = [];
-    ALL.forEach(function (p) { if (cs[p.id]) parts.push(cs[p.id] + "× " + p.short); });
-    return parts.join(", ");
-  }
   function renderHist() {
     prune();
     var today = new Date().toDateString();
@@ -480,22 +765,25 @@ h1 { font-family: var(--display); font-weight: 800; font-size: 1.15rem; line-hei
     history.forEach(function (h) {
       if (new Date(h.ts).toDateString() !== today) return;
       tSum += h.total; tN++;
-      for (var k in h.counts) if (byId[k] && byId[k].price > 0 && k !== "limo" && k !== "kaugummi") tCups += h.counts[k];
+      h.lines.forEach(function (l) { if (l.type === "becher") tCups += l.n; });
     });
     $("today").innerHTML =
       '<div><small>Heute kassiert</small><b>' + eur(tSum) + '</b></div>' +
       '<div><small>Bestellungen</small><b>' + tN + '</b></div>' +
-      '<div><small>Tassengetränke</small><b>' + tCups + '</b></div>';
+      '<div><small>Becher-Getränke</small><b>' + tCups + '</b></div>';
     $("histClear").disabled = !history.length;
     var L = $("histList"); L.innerHTML = "";
     if (!history.length) { L.innerHTML = '<div class="empty">Noch keine Bestellungen. Nach „Neue Bestellung“ erscheinen sie hier.</div>'; return; }
     history.slice(0, 50).forEach(function (h) {
       var el = document.createElement("div"); el.className = "hitem";
       el.innerHTML = '<div class="h1"><span class="time">' + fmtTime(h.ts) + '</span><span class="sum">' + eur(h.total) + '</span></div>' +
-        '<div class="items">' + itemsText(h.counts) + '</div>';
+        '<div class="items">' + h.lines.map(function (l) { return l.n + "× " + esc(l.name); }).join(", ") + '</div>';
       var b = document.createElement("button"); b.className = "edit"; b.textContent = "Bearbeiten";
       b.addEventListener("click", function () {
-        counts = JSON.parse(JSON.stringify(h.counts)); editingId = h.id; save(KEY_EDIT, editingId); undoStack = []; show("main");
+        counts = {}; var missing = false;
+        h.lines.forEach(function (l) { if (byId[l.id]) counts[l.id] = l.n; else missing = true; });
+        editingId = h.id; save(KEY_EDIT, editingId); undoStack = []; show("main");
+        if (missing) toast("Ein Getränk aus dieser Bestellung gibt es nicht mehr.");
       });
       el.appendChild(b); L.appendChild(el);
     });
@@ -506,12 +794,295 @@ h1 { font-family: var(--display); font-weight: 800; font-size: 1.15rem; line-hei
     else if (history.length) arm(b, "Sicher? Tippen");
   });
 
+  // ---------- PIN ----------
+  var pinBuf = "";
+  function pinDots() {
+    var len = getPin().length, d = $("pinDots"); d.innerHTML = "";
+    for (var i = 0; i < len; i++) { var x = document.createElement("i"); if (i < pinBuf.length) x.className = "on"; d.appendChild(x); }
+  }
+  (function buildKeys() {
+    var k = $("pinKeys");
+    ["1","2","3","4","5","6","7","8","9","x","0","<"].forEach(function (v) {
+      var b = document.createElement("button");
+      b.dataset.k = v;
+      if (v === "x") { b.textContent = "Abbrechen"; b.className = "fn"; }
+      else if (v === "<") { b.textContent = "⌫"; b.className = "fn"; b.setAttribute("aria-label", "Löschen"); }
+      else b.textContent = v;
+      k.appendChild(b);
+    });
+  })();
+  function openPin() { pinBuf = ""; $("pinMsg").textContent = "PIN eingeben"; $("pinMsg").className = ""; pinDots(); $("pinModal").hidden = false; }
+  function closePin() { $("pinModal").hidden = true; pinBuf = ""; }
+  function pinKey(v) {
+    var pin = getPin();
+    if (v === "x") return closePin();
+    if (v === "<") { pinBuf = pinBuf.slice(0, -1); return pinDots(); }
+    if (pinBuf.length >= pin.length) return;
+    pinBuf += v; pinDots(); buzz();
+    if (pinBuf.length === pin.length) {
+      if (pinBuf === pin) { setTimeout(function () { closePin(); enterAdmin(); }, 120); }
+      else {
+        var d = $("pinDots"); d.classList.remove("shake"); void d.offsetWidth; d.classList.add("shake");
+        $("pinMsg").textContent = "Falsche PIN"; $("pinMsg").className = "err";
+        setTimeout(function () { pinBuf = ""; pinDots(); }, 350);
+      }
+    }
+  }
+  $("pinKeys").addEventListener("click", function (e) { var b = e.target.closest("[data-k]"); if (b) pinKey(b.dataset.k); });
+  $("pinModal").addEventListener("click", function (e) { if (e.target === this) closePin(); });
+  document.addEventListener("keydown", function (e) {
+    if ($("pinModal").hidden) return;
+    if (/^\d$/.test(e.key)) pinKey(e.key);
+    else if (e.key === "Backspace") pinKey("<");
+    else if (e.key === "Escape") pinKey("x");
+  });
+  $("toAdmin").addEventListener("click", openPin);
+
+  // ---------- Admin: Bearbeiten direkt auf der Kasse ----------
+  var adminMode = false;
+  function refreshFront() { rebuildProducts(); pruneCounts(); applyBranding(); buildTiles(); renderMain(); }
+  function enterAdmin() {
+    adminMode = true; document.body.classList.add("admin"); $("adminBar").hidden = false;
+    show("main"); refreshFront();
+  }
+  function exitAdmin() {
+    adminMode = false; document.body.classList.remove("admin"); $("adminBar").hidden = true;
+    closeSheet(); undoStack = []; refreshFront(); show("main");
+  }
+  $("editDone").addEventListener("click", exitAdmin);
+  $("toSettings").addEventListener("click", function () { show("admin"); });
+  function backToTiles() { show("main"); refreshFront(); }
+  $("adminBack").addEventListener("click", backToTiles);
+  $("adminDone").addEventListener("click", backToTiles);
+
+  function adminClick(e) {
+    if (justDragged) return;
+    if (e.target.closest("#plusTile")) return openSheet(null);
+    var d = e.target.closest("[data-del]");
+    if (d) {
+      var id = d.dataset.del;
+      if (!d.classList.contains("armed")) return arm(d, "Löschen?");
+      disarm(); deleteTile(id); return;
+    }
+    var a = e.target.closest("[data-add]");
+    if (a) openSheet(a.dataset.add);
+  }
+  function deleteTile(id) {
+    cfg.items = cfg.items.filter(function (p) { return p.id !== id; });
+    if (id === "pfand") toast("„Pfand zurück“ gelöscht. Über + Kachel wieder hinzufügen.");
+    saveCfg(); refreshFront();
+  }
+
+  // Ziehen zum Verschieben (Finger oder Maus, über den Griff ⠿)
+  var drag = null, justDragged = false;
+  $("grid").addEventListener("pointerdown", function (e) {
+    var h = e.target.closest("[data-drag]"); if (!adminMode || !h || h.classList.contains("off")) return;
+    e.preventDefault();
+    var t = h.closest(".tile"), r = t.getBoundingClientRect();
+    var g = t.cloneNode(true); g.classList.add("ghost"); g.style.width = r.width + "px"; g.style.height = r.height + "px";
+    g.style.left = r.left + "px"; g.style.top = r.top + "px"; document.body.appendChild(g);
+    t.classList.add("dragging");
+    drag = { tile: t, ghost: g, dx: e.clientX - r.left, dy: e.clientY - r.top, id: e.pointerId };
+    try { h.setPointerCapture(e.pointerId); } catch (x) {}
+    buzz();
+  });
+  var scrollT = null;
+  function autoScroll(y) {
+    clearInterval(scrollT);
+    var edge = 70, v = y < edge ? -12 : y > innerHeight - edge ? 12 : 0;
+    if (v) scrollT = setInterval(function () { scrollBy(0, v); }, 16);
+  }
+  document.addEventListener("pointermove", function (e) {
+    if (!drag || e.pointerId !== drag.id) return;
+    drag.ghost.style.left = (e.clientX - drag.dx) + "px"; drag.ghost.style.top = (e.clientY - drag.dy) + "px";
+    autoScroll(e.clientY);
+    var el = document.elementFromPoint(e.clientX, e.clientY);
+    var over = el && el.closest("#grid .tile[data-tile]");
+    if (!over || over === drag.tile) return;
+    var tiles = Array.prototype.slice.call(document.querySelectorAll("#grid .tile[data-tile]"));
+    var from = tiles.indexOf(drag.tile), to = tiles.indexOf(over);
+    over.parentNode.insertBefore(drag.tile, from < to ? over.nextSibling : over);
+  });
+  function endDrag(e) {
+    if (!drag || (e && e.pointerId !== drag.id)) return;
+    clearInterval(scrollT);
+    drag.ghost.remove(); drag.tile.classList.remove("dragging");
+    var order = Array.prototype.map.call(document.querySelectorAll("#grid .tile[data-tile]"), function (t) { return t.dataset.tile; });
+    var map = {}; cfg.items.forEach(function (p) { map[p.id] = p; });
+    var next = order.filter(function (id) { return map[id]; }).map(function (id) { return map[id]; });
+    if (next.length === cfg.items.length) { cfg.items = next; saveCfg(); }
+    drag = null; justDragged = true; setTimeout(function () { justDragged = false; }, 50);
+    refreshFront();
+  }
+  document.addEventListener("pointerup", endDrag);
+  document.addEventListener("pointercancel", endDrag);
+
+  // Kachel-Editor
+  var draft = null, draftId = null, pfandOpt = $("shTypePfand");
+  function openSheet(id) {
+    draftId = id;
+    if (id) { var p = cfg.items.filter(function (x) { return x.id === id; })[0]; if (!p) return; draft = JSON.parse(JSON.stringify(p)); }
+    else draft = { id: uid(), icons: "", name: "", price: 900, color: "#8f1d2c", type: "becher" };
+    if (draft.type === "pfand") draft.price = cfg.pfand;
+    // "Pfand zurück" als Art nur anbieten, wenn es die Kachel noch nicht gibt (oder diese gerade bearbeitet wird)
+    var hasPfand = cfg.items.some(function (x) { return x.type === "pfand"; });
+    if (hasPfand && draft.type !== "pfand") pfandOpt.remove(); else if (!pfandOpt.parentNode) $("shType").appendChild(pfandOpt);
+    $("shTitle").textContent = id ? "Kachel bearbeiten" : "Neue Kachel";
+    $("shIcons").value = draft.icons; $("shName").value = draft.name;
+    $("shPrice").value = eurPlain(draft.price); $("shType").value = draft.type;
+    $("shTypeFld").hidden = !!id && draft.type === "pfand";
+    $("shPrice").parentNode.classList.toggle("md", !$("shTypeFld").hidden);
+    $("shDel").hidden = !id; $("shSave").textContent = id ? "Speichern" : "Hinzufügen";
+    disarm(); sheetPreview(); sheetColors();
+    $("sheet").hidden = false;
+    if (!id) setTimeout(function () { $("shName").focus(); }, 50);
+  }
+  function closeSheet() { $("sheet").hidden = true; draft = null; draftId = null; }
+  function sheetPreview() {
+    $("shPriceLbl").textContent = draft.type === "pfand" ? "Pfand pro Becher (€)" : "Preis (€)";
+    var p = draft.type === "pfand" ? { id: "pv", icons: draft.icons, name: draft.name || "Pfand zurück", price: -draft.price, color: draft.color, type: "pfand" } : draft;
+    var keep = adminMode; adminMode = false;
+    var t = tile(p); adminMode = keep;
+    $("shPrev").innerHTML = ""; $("shPrev").appendChild(t);
+    $("shHint").textContent = draft.type === "pfand" ? "Betrag pro zurückgegebenem Becher. Gilt auch für den Pfand-Hinweis oben."
+      : draft.type === "becher" ? "Preis so eintragen, wie er auf der Kachel steht (inkl. Pfand). Zählt als ausgegebener Becher."
+      : draft.type === "ohne" ? "Für Limo, Shots, Süßes usw. ohne Becherpfand." : "Zuschlag, z. B. + Schuss. Wird mit + angezeigt.";
+  }
+  function sheetColors() { swatches($("shColors"), draft.color, function (c) { draft.color = c; sheetColors(); sheetPreview(); }, true); }
+  $("shIcons").addEventListener("input", function () { draft.icons = this.value; sheetPreview(); });
+  $("shName").addEventListener("input", function () { draft.name = this.value; sheetPreview(); });
+  $("shPrice").addEventListener("input", function () { var c = parseEur(this.value); if (c != null && c >= 0) { draft.price = c; sheetPreview(); } });
+  $("shPrice").addEventListener("blur", function () { this.value = eurPlain(draft.price); });
+  $("shType").addEventListener("change", function () {
+    var was = draft.type; draft.type = this.value;
+    if (draft.type === "pfand") {
+      draft.id = "pfand"; draft.price = cfg.pfand;
+      if (!draft.name.trim()) { draft.name = "Pfand zurück"; $("shName").value = draft.name; }
+      if (!draft.icons) { draft.icons = "↩️"; $("shIcons").value = draft.icons; }
+    } else if (was === "pfand") { draft.id = uid(); draft.price = 900; }
+    $("shPrice").value = eurPlain(draft.price);
+    sheetPreview();
+  });
+  $("shCancel").addEventListener("click", closeSheet);
+  $("sheet").addEventListener("click", function (e) { if (e.target === this) closeSheet(); });
+  $("shSave").addEventListener("click", function () {
+    draft.name = draft.name.trim() || (draft.type === "pfand" ? "Pfand zurück" : "Ohne Namen");
+    if (draft.type === "pfand") { cfg.pfand = draft.price; draft.price = 0; }
+    var i = cfg.items.findIndex(function (x) { return x.id === (draftId || draft.id); });
+    if (i >= 0) cfg.items[i] = draft; else cfg.items.push(draft);
+    saveCfg(); closeSheet(); refreshFront();
+  });
+  $("shDel").addEventListener("click", function () {
+    var b = this;
+    if (!b.classList.contains("armed")) return arm(b, "Wirklich löschen?");
+    disarm(); var id = draftId; closeSheet(); deleteTile(id);
+  });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("sheet").hidden) closeSheet(); });
+
+  function swatches(container, value, onPick, allowNeutral) {
+    container.innerHTML = "";
+    if (allowNeutral) {
+      var n = document.createElement("button"); n.type = "button"; n.className = "nt" + (value ? "" : " on"); n.textContent = "Hell";
+      n.setAttribute("aria-label", "Ohne Farbe (helle Kachel)");
+      n.addEventListener("click", function () { onPick(""); });
+      container.appendChild(n);
+    }
+    var custom = value && SWATCHES.indexOf(value) < 0;
+    SWATCHES.forEach(function (c) {
+      var b = document.createElement("button"); b.type = "button"; b.style.background = c; b.className = value === c ? "on" : "";
+      b.setAttribute("aria-label", "Farbe " + c);
+      b.addEventListener("click", function () { onPick(c); });
+      container.appendChild(b);
+    });
+    var l = document.createElement("label"); l.className = custom ? "on" : ""; l.title = "Eigene Farbe";
+    if (custom) l.style.background = value;
+    var inp = document.createElement("input"); inp.type = "color"; inp.value = value || "#8f1d2c"; inp.setAttribute("aria-label", "Eigene Farbe wählen");
+    inp.addEventListener("change", function () { onPick(cleanColor(inp.value)); });
+    l.appendChild(inp); container.appendChild(l);
+  }
+
+  function renderAdmin() {
+    $("admName").value = cfg.name;
+    $("admSub").value = cfg.sub;
+    $("admSub").placeholder = subText() || "z. B. Preise inkl. Pfand";
+    $("pinNew").value = ""; $("pinNew2").value = "";
+    applyBranding();
+  }
+
+  $("admName").addEventListener("input", function () { cfg.name = this.value.trim() ? this.value.slice(0, 40) : "Zunfthaus-Rechner"; saveCfg(); applyBranding(); });
+  $("admSub").addEventListener("input", function () { cfg.sub = this.value; saveCfg(); applyBranding(); });
+
+  // Logo: Bild wird quadratisch zugeschnitten und verkleinert (256×256), damit es klein bleibt
+  $("logoPick").addEventListener("click", function () { $("logoFile").click(); });
+  $("logoFile").addEventListener("change", function () {
+    var f = this.files && this.files[0]; this.value = "";
+    if (!f) return;
+    var url = URL.createObjectURL(f), img = new Image();
+    img.onload = function () {
+      var S = 256, cv = document.createElement("canvas"); cv.width = S; cv.height = S;
+      var ctx = cv.getContext("2d");
+      var s = Math.min(img.naturalWidth, img.naturalHeight);
+      ctx.drawImage(img, (img.naturalWidth - s) / 2, (img.naturalHeight - s) / 2, s, s, 0, 0, S, S);
+      URL.revokeObjectURL(url);
+      cfg.logo = cv.toDataURL("image/png"); saveCfg(); applyBranding(); toast("Logo gespeichert");
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); toast("Dieses Bild kann nicht gelesen werden."); };
+    img.src = url;
+  });
+  $("logoReset").addEventListener("click", function () { cfg.logo = null; saveCfg(); applyBranding(); });
+
+  $("pinSave").addEventListener("click", function () {
+    var a = $("pinNew").value, b = $("pinNew2").value;
+    if (!/^\d{4,6}$/.test(a)) return toast("Die PIN muss aus 4 bis 6 Ziffern bestehen.");
+    if (a !== b) return toast("Die beiden PINs stimmen nicht überein.");
+    save(KEY_PIN, a); $("pinNew").value = ""; $("pinNew2").value = ""; toast("Neue PIN gespeichert");
+  });
+
+  $("expBtn").addEventListener("click", function () {
+    var blob = new Blob([JSON.stringify({ app: "zunfthaus-rechner", version: 1, config: cfg }, null, 2)], { type: "application/json" });
+    var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "zunfthaus-rechner-einstellungen.json";
+    document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  });
+  $("impBtn").addEventListener("click", function () { $("impFile").click(); });
+  $("impFile").addEventListener("change", function () {
+    var f = this.files && this.files[0]; this.value = "";
+    if (!f) return;
+    var r = new FileReader();
+    r.onload = function () {
+      try {
+        var data = JSON.parse(r.result);
+        if (!data || (data.app !== "zunfthaus-rechner" && data.app !== "gluehweinkasse") || !data.config) throw new Error("x");
+        cfg = sanitize(data.config); saveCfg(); renderAdmin(); toast("Einstellungen importiert");
+      } catch (e) { toast("Diese Datei passt nicht."); }
+    };
+    r.readAsText(f);
+  });
+  $("resetBtn").addEventListener("click", function () {
+    var b = this;
+    if (b.classList.contains("armed")) { cfg = defaults(); saveCfg(); disarm(); renderAdmin(); toast("Auf Standard zurückgesetzt"); }
+    else arm(b, "Sicher? Nochmal tippen");
+  });
+
   // Bildschirm wach halten (wenn erlaubt)
   function wake() { try { navigator.wakeLock && navigator.wakeLock.request("screen").catch(function(){}); } catch (e) {} }
   document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") wake(); });
   wake();
 
-  buildTiles(); show("main");
+  // Hell / Dunkel: folgt dem System, bis man umschaltet; Wahl wird auf dem Gerät gespeichert
+  var mq = window.matchMedia ? matchMedia("(prefers-color-scheme: dark)") : null;
+  function effTheme() { var t = load(KEY_THEME, null); return t === "dark" || t === "light" ? t : (mq && mq.matches ? "dark" : "light"); }
+  function applyTheme() {
+    var t = effTheme();
+    document.documentElement.setAttribute("data-theme", t);
+    $("themeIc").textContent = t === "dark" ? "☀︎" : "☾";
+    $("themeBtn").setAttribute("aria-label", t === "dark" ? "Hellen Modus einschalten" : "Dunklen Modus einschalten");
+    document.querySelector('meta[name="theme-color"]').setAttribute("content", t === "dark" ? "#0a100c" : "#1d2b24");
+  }
+  $("themeBtn").addEventListener("click", function () { save(KEY_THEME, effTheme() === "dark" ? "light" : "dark"); applyTheme(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", applyTheme);
+  applyTheme();
+
+  applyBranding(); buildTiles(); show("main");
 })();
 </script>
 <script>if ("serviceWorker" in navigator) { window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); }); }</script>
